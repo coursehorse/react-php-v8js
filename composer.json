@@ -1,5 +1,5 @@
 {
-  "name": "reactjs/react-php-v8js",
+  "name": "coursehorse/react-php-v8js",
   "description": "PHP library that renders React components on the server",
   "require": {
     "ext-v8js": ">=0.1.3"
