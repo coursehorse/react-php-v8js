@@ -38,31 +38,46 @@ class ReactJS {
      * Custom error handler
      * @var callable
      */
-    $errorHandler;
+    $errorHandler,
+    $hash,
+    $reactPath;
   
-  /**
-   * Initialize by passing JS code as a string.
-   * The application source code is concatenated string
-   * of all custom components and app code
-   *
-   * @param string $libsrc React's source code
-   * @param string $appsrc Application source code
-   */
-  function __construct($libsrc, $appsrc) {
-    $react = array();
-    // stubs, react
+  function __construct($requireJs, $reactPath) {
+
+    $react = array(); //TODO: this is a poorly named variable
+
+    // Unsure if necessary...
     $react[] = "var console = {warn: function(){}, error: print}";
     $react[] = "var global = global || this, self = self || this, window = window || this";
-    $react[] = $libsrc;
-    $react[] = "var React = global.React";
-    // app's components
-    $react[] = $appsrc;
-    $react[] = ';';
+
+    //Load up requireJS
+    $react[] = $requireJs; 
+    // $react[] = "var React = require('" . $reactPath . "');";
+    $react[] = "var React = require('" . $reactPath . "');";
 
     $concatenated = implode(";\n", $react);
 
+    $this->reactPath = $reactPath;
+
     $this->v8 = new V8Js();
+
+    //NOTE: This seems to be the crux of the big problem getting serverside rendering to work. 
+    //      require('') is not loading up requireJS's env and therefore not able to load up the es6! module. 
+    //      I think it has something to do with using AMD and if we switch to a CommonJS like model like browserfy 
+    //      I think we could load more directly.
+
+    $this->setRequires(["react" => $reactPath]);
     $this->executeJS($concatenated);
+
+  }
+
+  function setRequires($hash = []) {
+    $this->hash = $hash; //TODO: is there a better way to pass $hash in in phP
+    $this->v8->setModuleLoader(function($path) {
+        $hash = $this->hash;
+        $path = array_key_exists($path, $hash) ? $hash[$path] : ("/" . $path);
+        return file_get_contents($path);
+    });
   }
   
   /**
@@ -75,8 +90,10 @@ class ReactJS {
    *              when initializing the component. Optional.
    * @return object $this instance
    */
-  function setComponent($component, $data = null) {
+  function setComponent($component, $path, $data = null) {
+    // $path must be set to babelified Component and export the $component
     $this->component = $component;
+    $this->executeJS( sprintf("%s = require('%s')",$component, $path) );
     $this->data = json_encode($data);
     return $this;
   }
