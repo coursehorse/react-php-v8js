@@ -42,7 +42,7 @@ class ReactJS {
     $hash,
     $reactPath;
   
-  function __construct($requireJs, $reactPath) {
+  function __construct($reactPath) {
 
     $react = array(); //TODO: this is a poorly named variable
 
@@ -50,9 +50,7 @@ class ReactJS {
     $react[] = "var console = {warn: function(){}, error: print}";
     $react[] = "var global = global || this, self = self || this, window = window || this";
 
-    //Load up requireJS
-    $react[] = $requireJs; 
-    // $react[] = "var React = require('" . $reactPath . "');";
+    //Load up ReactJs
     $react[] = "var React = require('" . $reactPath . "');";
 
     $concatenated = implode(";\n", $react);
