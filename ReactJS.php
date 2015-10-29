@@ -76,7 +76,9 @@ class ReactJS {
     $this->v8->setModuleLoader(function($path) {
         $hash = $this->hash;
         $path = array_key_exists($path, $hash) ? $hash[$path] : ("/" . $path);
-        return file_get_contents($path);
+        $contents = @file_get_contents($path);
+        $result = $contents ?: "function() { return true }";
+        return $result;
     });
   }
   
